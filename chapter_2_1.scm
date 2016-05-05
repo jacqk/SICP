@@ -125,16 +125,16 @@
 
 ; test
 
-(define p1 (make-point 1 1))
-(define p2 (make-point 1 2))
-(define p3 (make-point 2 2))
-(define p4 (make-point 2 1))
+; (define p1 (make-point 1 1))
+; (define p2 (make-point 1 2))
+; (define p3 (make-point 2 2))
+; (define p4 (make-point 2 1))
 
-(define rect1 (make-rect p1 p2 p3 p4))
-(newline)
-(display (perimeter-rect rect1))
-(newline)
-(display (area-rect rect1))
+; (define rect1 (make-rect p1 p2 p3 p4))
+; (newline)
+; (display (perimeter-rect rect1))
+; (newline)
+; (display (area-rect rect1))
 
 ; 2.1.3 what is meant by data?
 
@@ -161,34 +161,34 @@
 
 ; ex 2.5
 
-(define (cons a b)
-  (* (expt 2 a) (expt 3 b)))
+; (define (cons a b)
+;   (* (expt 2 a) (expt 3 b)))
 
-(define (car c)
-  (define (iter a result)
-    (if (= (remainder a 2) 0)
-      (iter (/ a 2) (+ result 1))
-      result))
-  (iter c 0))
-
-; test
-(newline)
-(define test (cons 2 2))
-(display (car test))
-
-(define (cdr c)
-  (define (iter a result)
-    (if (= (remainder a 3) 0)
-      (iter (/ a 3) (+ result 1))
-      result))
-  (iter c 0))
-
+; (define (car c)
+;   (define (iter a result)
+;     (if (= (remainder a 2) 0)
+;       (iter (/ a 2) (+ result 1))
+;       result))
+;   (iter c 0))
 
 ; test
-(newline)
-(display (cdr test))
+; (newline)
+; (define test (cons 2 2))
+; (display (car test))
 
-; ex2.6
+; (define (cdr c)
+;   (define (iter a result)
+;     (if (= (remainder a 3) 0)
+;       (iter (/ a 3) (+ result 1))
+;       result))
+;   (iter c 0))
+
+
+; test
+; (newline)
+; (display (cdr test))
+
+; ex2.6 unsolved
 
 (define zero (lambda (f) (lambda (x) x)))
 (define (add-1 n)
@@ -196,4 +196,96 @@
 
 (define one (add-1 zero))
 
-(define one (lambda (f) (lambda (x) (f (((lambda (f) (lambda (x) x)) f) x)))))
+(define two (add-1 one))
+
+; 2.1.4 extended exercise: interval arithmetic
+
+(define (add-interval x y)
+  (make-interval (+ (lower-bound x) (lower-bound y))
+                 (+ (upper-bound x) (upper-bound y))))
+
+(define (mul-interval x y)
+  (let ((p1 (* (lower-bound x) (lower-bound y)))
+        (p2 (* (lower-bound x) (upper-bound y)))
+        (p3 (* (upper-bound x) (lower-bound y)))
+        (p4 (* (upper-bound x) (upper-bound y))))
+    (make-interval (min p1 p2 p3 p4)
+                   (max p1 p2 p3 p4))))
+
+(define (div-interval x y)
+  (mul-interval x
+                (make-interval (/ 1.0 (upper-bound y))
+                               (/ 1.0 (lower-bound y)))))
+
+(define (make-interval lower upper) (cons lower upper))
+
+; ex2.7
+(define (upper-bound interval) (cdr interval))
+(define (lower-bound interval) (car interval))
+
+; ex2.8
+(define (sub-interval x y)
+  (add-interval x
+                (make-interval (- (upper-bound y))
+                               (- (lower-bound y)))))
+
+; ex2.9
+(define (width-interval x)
+  (/ (- (uppper-bound x) (lower-bound x)) 2.0))
+
+; ex2.10
+(define (make-interval x y)
+  (if (= x y)
+    (error "invalid input")
+    (cons x y)))
+
+; ex2.11 unsolved
+(define (make-center-width c w)
+  (make-interval (- c 2) (+ c w)))
+
+(define (center i)
+  (/ (+ (lower-interval i) (upper-interval i)) 2))
+
+; ex2.12
+(define (percent p)
+  (/ p 100))
+
+(define (make-center-percent c p)
+  (make-interval (* c (- 1 (percent p)))
+                 (* c (+ 1 (percent p)))))
+
+; ex2.13 unsolved
+(define (par1 r1 r2)
+  (div-interval (mul-interval r1 r2)
+                (add-interval r1 r2)))
+
+(define (par2 r1 r2)
+  (let ((one (make-interval 1 0)))
+    (div-interval one
+                  (add-interval  (div-interval one r1)
+                                 (div-interval one r2)))))
+
+; ex2.14 2.15 2.16 unsolved
+;
+; test
+(newline)
+(define t1 (make-interval 1.0 2.0))
+(define t2 (make-interval 3.0 4.0))
+; (define e1 (make-interval 0.0 0.0))
+(display t1)
+(display t2)
+(display (add-interval t1 t2))
+(display (sub-interval t1 t2))
+(display (mul-interval t1 t2))
+(display (div-interval t1 t2))
+(define t3 (make-center-width 3.5 0.15))
+(define t4 (make-center-percent 3.5 15))
+(display t3)
+(display t4)
+(newline)
+(display (par1 t3 t4))
+; (display (par2 t3 t4))
+
+(newline)
+(display (div-interval t1 t2))
+(display (div-interval t1 t1))
