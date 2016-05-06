@@ -111,14 +111,117 @@
 
 (define (map proc items)
   (if (null? items)
-     ()
-     (cons (proc (car items))
-           ((map proc (cdr items))))))
+    ()
+    (cons (proc (car items))
+          (map proc (cdr items)))))
 
 ; test
+(newline)
 (display (map abs (list -10 2.5 -11.6 17)))
-; (display (map (lambda (x) (* x x))
-;              (list 1 2 3 4)))
+(display (map (lambda (x) (* x x))
+             (list 1 2 3 4)))
 
+(define (scale items factor)
+  (map (lambda (x) (* x factor))
+       items))
+
+; ex2.21
+
+(define (square-list items)
+  (map (lambda (x) (* x x))
+       items))
+
+(define (square-list items)
+  (if (null? items)
+    ()
+    (cons (square (car items))
+          (square-list (cdr items)))))
+
+; test
+(newline)
+(display (square-list (list 1 2 3 4)))
+
+; ex2.22
+
+(define (square-list items)
+  (define (iter items prod)
+    (if (null? items)
+      (reverse prod)
+      (iter (cdr items)
+            (cons (square (car items))
+                  prod))))
+  (iter items ()))
+
+(newline)
+(display (square-list (list 1 2 3 4)))
+
+; ex2.23
+
+(define (for-each proc items)
+  (if (not (null? items))
+    (begin
+      (proc (car items))
+      (for-each proc (cdr items)))))
+
+; test
+(for-each (lambda (x) (newline) (display x))
+          (list 57 321 88))
+
+; 2.2.2
+
+(define (length items)
+  (if (null? items)
+    0
+    (+ 1 (length (cdr items)))))
+
+(define (count-leaves items)
+  (cond ((null? items) 0)
+        ((not (pair? items)) 1)
+        (else (+ (count-leaves (car items))
+                   (count-leaves (cdr items))))))
+
+; test
+(define x (cons (list 1 2) (list 3 4)))
+(newline)
+(display (length x))
+(newline)
+(display (count-leaves x))
+
+; ex2.24
+
+(newline)
+(display (list 1 (list 2 (list 3 4))))
+
+; ex2.25
+
+(newline)
+(define a (list 1 3 (list 3 7) 9))
+(display a)
+(newline)
+(display (car (cdr (list-ref a 2))))
+(newline)
+(define b (list (list 7)))
+(display b)
+(newline)
+(display (car (car b)))
+(newline)
+(define c (list 1 (list 2 (list 3 (list 4 (list 5 (list 6 7)))))))
+(display c)
+(newline)
+(display (car (cdr (car (cdr (car (cdr (car (cdr (car (cdr (car (cdr c)))))))))))))
+
+; ex2.26
+
+(define x (list 1 2 3))
+(define y (list 4 5 6))
+
+(newline)
+(display (append x y))
+(newline)
+(display (cons x y))
+(newline)
+(display (list x y))
+
+; ex2.27
 
 
