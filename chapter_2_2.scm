@@ -224,4 +224,39 @@
 
 ; ex2.27
 
+(define (deep-reverse items)
+  (cond ((null? items) ())
+        ((pair? items) (reverse (cons  (deep-reverse (car items))
+                                       (deep-reverse (cdr items)))))
+        (else items)))
 
+; test
+(define x (list (list 1 2) (list 3 4)))
+(newline)
+(display (reverse x))
+(newline)
+(display (deep-reverse x))
+
+; ex 2.28
+
+(define (fringe items)
+  (cond ((null? items) ())
+        ((not (pair? items)) (list items))
+        (else (append (fringe (car items))
+                    (fringe (cdr items))))))
+
+; test
+(define x (list (list 1 2) (list 3 4)))
+(newline)
+(fringe x)
+
+(fringe (list x x))
+
+; ex2.29
+
+(define (make-mobile left right)
+  (list left right))
+(define (make-branch len structure)
+  (list len structure))
+
+(define )
