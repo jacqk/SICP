@@ -259,4 +259,142 @@
 (define (make-branch len structure)
   (list len structure))
 
-(define )
+(define (left-branch mobile)
+  (car mobile))
+(define (right-branch mobile)
+  (car (cdr mobile)))
+
+(define (branch-length branch)
+  (car branch))
+(define (branch-structure branch)
+  (car (cdr branch)))
+
+(define (total-weight items)
+  (+ (branch-weight (left-branch items))
+     (branch-weight (right-branch items))))
+
+(define (branch-weight branch)
+  (if (pair? (branch-structure branch))
+    (total-weight (branch-structure branch))
+    (branch-structure branch)))
+
+(define (branch-torque branch)
+  (* (branch-length branch)
+     (branch-weight branch)))
+
+(define (mobile-balance items)
+  (and (= (branch-torque (left-branch items))
+          (branch-torque (right-branch items)))
+       (branch-balance (left-branch items))
+       (branch-balance (right-branch items))))
+
+(define (branch-balance branch)
+  (if (pair? (branch-structure branch))
+    (mobile-balance (branch-structure branch)
+    #t)))
+
+; new comprehension
+
+(define (make-mobile left right)
+  (cons left right))
+(define (make-branch len structure)
+  (cons len structure))
+(define (left-branch mobile)
+  (car mobile))
+(define (right-branch mobile)
+  (cdr mobile))
+(define (branch-length branch)
+  (car branch))
+(define (branch-structure branch)
+  (cdr branch))
+
+
+; test
+(define mobile (make-mobile (make-branch 10 25)
+                            (make-branch 5 20)))
+(define mobile (make-mobile (make-branch 5 mobile)
+                            (make-branch 10 20)))
+
+(newline)
+(display (left-branch mobile))
+(newline)
+(display (right-branch mobile))
+(newline)
+(display (branch-length (left-branch mobile)))
+(newline)
+(display (branch-structure (right-branch mobile)))
+(newline)
+(display (total-weight mobile))
+(newline)
+(display (branch-torque (right-branch mobile)))
+(newline)
+(display (branch-torque (left-branch mobile)))
+(newline)
+(display (mobile-balance mobile))
+
+; mapping over trees
+
+(define (scale-tree tree factor)
+  (cond ((null? tree) ())
+        ((not (pair? tree)) (* factor tree))
+        (else (cons (scale-tree (car tree) factor)
+                    (scale-tree (cdr tree) factor)))))
+
+(define (scale-tree tree factor)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+           (scale-tree sub-tree factor)
+           (* factor sub-tree)))
+       tree))
+
+; test
+
+(newline)
+(display (scale-tree (list 1 (list 2 (list 3 4) 5) (list 6 7)) 10))
+
+; ex2.30
+
+(define (square-tree tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+           (square-tree sub-tree)
+           (* sub-tree sub-tree)))
+       tree))
+
+(define (square-tree tree)
+  (cond ((null? tree) ())
+        ((not (pair? tree)) (* tree tree))
+        (else (cons (square-tree (car tree))
+                    (square-tree (cdr tree))))))
+
+; ex 2.31
+
+(define (tree-map proc tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+           (tree-map proc sub-tree)
+           (proc sub-tree)))
+       tree))
+
+(define (square-tree tree)
+  (tree-map (lambda (x) (* x x)) tree))
+
+; test
+(newline)
+(display (square-tree (list 1 (list 2 (list 3 4) 5) (list 6 7))))
+
+; ex 2.32
+
+(define (subsets s)
+  (if (null? s)
+    (list ())
+    (let ((rest (subsets (cdr s))))
+      (append rest (map (lambda (x) (cons (car s) x)) rest)))))
+
+; test
+(newline)
+(display (subsets (list 1 2 3)))
+
+; 2.2.3 sequences as conventional interfaces
+
+
