@@ -511,7 +511,7 @@
 (define s (list (list 1 2 3) (list 4 5 6) (list 7 8 9) (list 10 11 12)))
 (display (accumulate-n + 0 s))
 
-; ex2.27
+; ex2.37
 
 (define (dot-product v w)
   (accumulate + 0 (map * v w)))
@@ -524,14 +524,15 @@
 (define (transpose mat)
   (accumulate-n cons () mat))
 
-(define (maxtrix-*matrix m n)
+(define (matrix-*-matrix m n)
   (let ((cols (transpose n)))
-    ())
+    (map (lambda (vec) (matrix-*-vector m vec)) cols)))
 
 
 
 ; test
 (define m (list (list 1 2 3 4) (list 4 5 6 6) (list 6 7 8 9)))
+(define n (list (list 1 4 6) (list 2 5 7) (list 3 6 8) (list 4 6 9)))
 (define v (list 1 2 3 4))
 (newline)
 (display (dot-product v v))
@@ -539,6 +540,72 @@
 (display (matrix-*-vector m v))
 (newline)
 (display (transpose m))
+(newline)
+(display (matrix-*-matrix m n))
+
+; ex2.38
+
+(define (fole-left op initial sequence)
+  (define (iter rusult rest)
+    (if (null? rest)
+      result
+      (iter (cons (op (car rest))
+                  result)
+            (cdr rest))))
+  (iter initial sequence))
+
+(newline)
+(display (fold-right / 1 (list 1 2 3)))
+(newline)
+(display (fold-left / 1 (list 1 2 3)))
+(newline)
+(display (fold-right list () (list 1 2 3)))
+(newline)
+(display (fold-left list () (list 1 2 3 4)))
+
+; ex2.39
+
+(define (reverse sequence)
+  (fold-right (lambda (x y) (append y (list x))) () sequence))
+
+; test
+(newline)
+(display (reverse (list 1 2 3 4)))
+
+(define (reverse sequence)
+  (fold-left (lambda (x y) (cons y x)) () sequence))
+
+; test
+(newline)
+(display (reverse (list 1 2 3 4)))
+
+; nested mappings
+
+(accumulate append
+            ()
+            (map (lambda (j) (list i j))
+                 (enumerate-interval 1 (- i 1))
+                 (enumerate-interval 1 n)))
+
+(define (flatmap proc seq)
+  (accumulate append () (map proc seq)))
+
+(define (prime-sum? pair)
+  (prime? (+ (car pair) (cdr pair))))
+
+(define (make-pair-sum pair)
+  (list (car pair) (cdr pair) (+ (car pair) (cdr pair))))
+
+(define (prime-sum-pairs n)
+  (map make-pair-sum
+       (filter prime-sum?
+               (flatmap (lambda (i)
+                          (map (lambda (j) (list i j)) (enumerate-intermal 1 (- i 1))))
+                        (enumerate-interval 1 n)))))
+
+(define permutations s)
+
+
 
 
 
