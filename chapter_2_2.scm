@@ -646,6 +646,47 @@
 (newline)
 (display (triple-sum-triples 5 10))
 
-; ex2.42
+; ex2.42 unsolved
 
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+      (list empty-board)
+      (filter
+        (lambda (position) (safe? k position))
+        (flatmap
+          (lambda (rest-of-queens)
+            (map (lambda (new-row)
+                   (adjoin-position new-row k rest-of-queens))
+                 (enumerate-interval 1 board-size)))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size))
+
+(define (adjoin-position new-row k rest-of-queens)
+  (cons new-row rest-of-queens))
+
+; ex2.43 unsolved
+
+; 2.2.4 example a picture language
+
+(define (flipped-pairs painter)
+  (let ((painter2 (beside painter (flip-vert painter))))
+    (below painter2 painter2)))
+
+(define (right-split painter n)
+  (if (= n 0)
+    painter
+    (let ((smaller (right-split painter (- n 1))))
+      (beside painter (belowe smaller smaller)))))
+
+(define (corner-split painter n)
+  (if (= n 0)
+    painter
+    (let ((up (up-split painter (- n 1)))
+          (right (right-split painter (- n 1))))
+      (let ((top-left (beside up up))
+            (bottom-right (below right right))
+            (corner (corner-split painter (- n 1))))
+        (beside (below painter top-left)
+                (below bottom-right corner))))))
 
