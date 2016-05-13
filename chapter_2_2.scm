@@ -581,12 +581,6 @@
 
 ; nested mappings
 
-(accumulate append
-            ()
-            (map (lambda (j) (list i j))
-                 (enumerate-interval 1 (- i 1))
-                 (enumerate-interval 1 n)))
-
 (define (flatmap proc seq)
   (accumulate append () (map proc seq)))
 
@@ -594,24 +588,64 @@
   (prime? (+ (car pair) (cdr pair))))
 
 (define (make-pair-sum pair)
-  (list (car pair) (cdr pair) (+ (car pair) (cdr pair))))
+  (list (car pair) (cadr pair) (+ (car pair) (cadr pair))))
 
 (define (prime-sum-pairs n)
   (map make-pair-sum
        (filter prime-sum?
                (flatmap (lambda (i)
-                          (map (lambda (j) (list i j)) (enumerate-intermal 1 (- i 1))))
+                          (map (lambda (j) (list i j)) (enumerate-interval 1 (- i 1))))
                         (enumerate-interval 1 n)))))
 
-(define permutations s)
+(define (permutations s)
+  (if (null? s)
+    (list ())
+    (flatmap (lambda (x)
+               (map (lambda (p) (cons x p))
+                    (permutation (remove x s))))
+             s)))
 
+(define (remove item sequence)
+  (filter (lambda (x) (not (= x item)))
+          sequence))
 
+; ex2.40
+;
+(define (unique-pairs n)
+  (flatmap (lambda (x)
+             (map (lambda (y) (list x y)) (enumerate-interval 1 (- x 1))))
+           (enumerate-interval 1 n)))
 
+(newline)
+(display (unique-pairs 10))
 
+; ex2.41
 
+(define (unique-triples n)
+  (flatmap (lambda (x)
+             (map (lambda (y) (cons x y))
+                  (unique-pairs (- x 1))))
+           (enumerate-interval 1 n)))
 
+; test
+(newline)
+(display (unique-triples 5))
 
+(define (list-sum items)
+  (accumulate + 0 items))
 
+; test
+(newline)
+(display (list-sum (list 1 2 3 4)))
 
+(define (triple-sum-triples n s)
+  (filter (lambda (x) (= s (list-sum x)))
+          (unique-triples n)))
+
+; test
+(newline)
+(display (triple-sum-triples 5 10))
+
+; ex2.42
 
 
