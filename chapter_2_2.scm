@@ -723,7 +723,156 @@
         (op1 painter
              (op2 smaller smaller))))))
 
+(define right-split (split beside below))
+(define up-split (split below beside))
+
 ; framework
 
+(define (frame-coord-map frame)
+  (lambda (v)
+    (add-vect
+      (origin-frame frame)
+      (add-vect (scale-vect (xcor-vect v)
+                            (edge1-frame frame))
+                (scale-vect (ycor-vect v)
+                            (edge2-frame frame))))))
+
+; ex2.46
+;
+(define (make-vect x y)
+  (cons x y))
+
+(define (xcor-vect vect)
+  (car vect))
+
+(define (ycor-vect vect)
+  (cdr vect))
+
+(define (add-vect vect1 vect2)
+  (let ((x-new (+ (xcor-vect vect1)
+                  (xcor-vect vect2)))
+        (y-new (+ (ycor-vect vect1)
+                  (ycor-vect vect2))))
+    (make-vect x-new y-new)))
+
+(define (sub-vect vect1 vect2)
+  (let ((x-new (- (xcor-vect vect1)
+                  (xcor-vect vext2)))
+        (y-new (- (ycor-vect vext1)
+                  (ycor-vect vect2))))
+    (make-vect x-new y-new)))
+
+(define (scale-vect vect s)
+  (make-vect (* s (xcor-vect vect))
+             (* s (ycor-vect vect))))
+
+; ex2.47
+
+(define (make-frame origin edge1 edge2)
+  (list origin edge1 edge2))
+
+(define (frame-origin frame)
+  (car frame))
+
+(define (frame-edge1 frame)
+  (list-ref frame 1))
+
+(define (frame-edge2 frame)
+  (list-ref frame 2))
+
+(define (make-frame origin edge1 edge2)
+  (cons origin (cons edge1 edge2)))
+
+(define (frame-origin frame)
+  (car frame))
+
+(define (frame-edge1 frame)
+  (car (car frame)))
+
+(define (frame-edge2 frame)
+  (cdr (car frame)))
+
+; painter
+
+(define (segment->painter segment-list)
+  (lambda (frame)
+    (for-each
+      (lambda (segment)
+        (draw-line
+          ((frame-coord-map frame) (start-segment segment))
+          ((frame-coord-map frame) (end-segment segment))))
+      segment-list)))
+
+; ex2.48
+
+(define (make-segment vect1 vect2)
+  (cons vect1 vect2))
+
+(define (start-segment segment)
+  (car segment))
+
+(define (end-start segment)
+  (cdr segment))
+
+; ex2.49
+;
+(define (frame->painter frame)
+  (let ((p1 (frame-origin frame))
+        (p2 (add-vect (frame-origin frame)
+                      (frame-edge1 frame)))
+        (p3 (add-vect (frame-origin frame)
+                      (add-vect (frame-edge1 frame)
+                                (frame-edge2 frame))))
+        (p4 (add-vect (frame-origin frame)
+                      (frame-edge2 frame))))
+    (segment->painter (list (make-segment p1 p2)
+                          (make-segment p2 p3)
+                          (make-segment p3 p4)
+                          (make-segment P4 P1)))))
+
+(define (fork->painter frame)
+  (let ((p1 (frame-origin frame))
+         (p2 (add-vect (frame-origin frame)
+                       (frame-edge1 frame)))
+         (p3 (add-vect (frame-origin frame)
+                       (add-vect (frame-edge1 frame)
+                                 (frame-edge2 frame))))
+         (p4 (add-vect (frame-origin frame)
+                       (frame-edge2 frame))))
+    (segment->painter (list (make-segment p1 p3)
+                            (make-segment p2 p4)))))
+
+(define (dimond->painter frame)
+  (let ((p1 (add-vect (frame-origin frame)
+                      (scale-vect (frame-edge1 frame) 0.5)))
+        (p2 (add-vect (frame-origin frame)
+                      (add-vect (frame-edge1 frame)
+                                (scale-vect (frame-edge2 frame) 0.5))))
+        (p3 (add-vect (frame-origin frame)
+                      (add-vect (scale-vect (frame-edge1 frame) 0.5)
+                                (frame-edge2 frame))))
+        (p4 (add-vect (frame-origin frame)
+                      (scale-vect (frame-edge2 frame) 0.5))))
+    (segment->painter (list (make-segment p1 p2)
+                            (make-segment p2 p3)
+                            (make-segment p3 p4)
+                            (make-segment p4 p1)))))
+
+; transform of painter p94
+
+(define (transform-painter painter origin corner1 corner2)
+  (lambda (frame)
+    (let ((m (frame-coord-map frame)))
+      (let ((new-origin (m origin)))
+        (painter
+          (make-frame new-origin
+                      (sub-vect (m corner1) new-origin)
+                      (sub-vect (m corner2) new-origin)))))))
+
+(define (flip-vert painter)
+  (transfrom-painter painter
+                     (make-vert 0.0 1.0)
+                     (make-vect 1.0 1.0)
+                     (make-vect 0.0 0.0)))
 
 
