@@ -875,4 +875,5 @@
                      (make-vect 1.0 1.0)
                      (make-vect 0.0 0.0)))
 
+; ex2.50-52 unsolved
 
