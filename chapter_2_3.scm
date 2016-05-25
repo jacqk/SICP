@@ -39,15 +39,15 @@
 
 ; ex2.54
 
-(define (equal? list1 list2)
-  (cond ((and (null? list1) (null? list2)) #t)
-        ((and (pair? (car list1)) (pair? (car list2)))
-         (and (equal? (car list1) (car list2))
-              (equal (cdr list1) (cdr list2))))
-        ((not (or (pair? (car list1)) (pair? (car list2))))
-         (and (eq? (car list1) (car list2))
-              (equal? (cdr list1) (cdr list2))))
-        (else #f)))
+; (define (equal? list1 list2)
+;   (cond ((and (null? list1) (null? list2)) #t)
+;         ((and (pair? (car list1)) (pair? (car list2)))
+;          (and (equal? (car list1) (car list2))
+;               (equal (cdr list1) (cdr list2))))
+;         ((not (or (pair? (car list1)) (pair? (car list2))))
+;          (and (eq? (car list1) (car list2))
+;               (equal? (cdr list1) (cdr list2))))
+;         (else #f)))
 
 ; test
 (newline)
@@ -170,7 +170,7 @@
 (newline)
 (display (deriv '(* x y (+ x 3)) 'x))
 
-; ex2.58
+; ex2.58 a, b
 
 (define (make-sum a1 a2)
   (cond ((=number? a1 0) a2)
@@ -185,5 +185,96 @@
         ((=number? m2 1) m2)
         ((and (number? m1) (number? m2)) (* m1 m2))
         (else (list m1 '* m2))))
+
+(define (sum? expr)
+  (and (pair? expr) (eq? (cadr expr) '+)))
+
+(define (addend s) (car s))
+
+(define (augend s) (list-ref s 3))
+
+(define (product? expr)
+  (and (pair? expr) (eq? (cadr expr) '*)))
+
+(define (multiplier p) (car p))
+
+(define (multiplicand p) (list-ref p 3))
+
+; ex2.58 c unsolved
+
+; 2.3.3 example: representing sets
+; sets as unordered lists
+
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((equal? x (car set)) #t)
+        (else (element-of-set? x (cdr set)))))
+
+(define (adjoin-set x set)
+  (if (element-of-set? x set)
+    set
+    (cons x set)))
+
+(define (intersection-set set1 set2)
+  (cond ((or (null? set1) (null? set2)) ())
+        ((element-of-set? (car set1) set2)
+         (cons (car set1) (intersection-set (cdr set1) set2)))
+        (else (intersection-set (cdr set1) set2))))
+
+; ex2.59
+(define (union-set set1 set2)
+  (cond ((null? set1) set2)
+        ((element-of-set? (car set1) set2)
+         (union-set (cdr set1) set2))
+        (else (union-set (cdr set1) (cons (car set1) set2)))))
+; test
+
+(define list-1 '(x y z w))
+(define list-2 '(a b x y))
+
+(newline)
+(display list-1)
+(display list-2)
+
+(newline)
+(display (element-of-set? 'x list-1))
+(newline)
+(display (adjoin-set 's list-1))
+(newline)
+(display (intersection-set list-1 list-2))
+(newline)
+(display (union-set list-1 list-2))
+
+; ex2.60
+
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((equal? x (car set)) #t)
+        (else (element-of-set? x (cdr set)))))
+
+(define (adjoin-set x set)
+  (cons x set))
+
+(define (union-set set1 set2)
+  (append set1 set2))
+
+(define (intersection-set set1 set2)
+  (cond ((or (null? set1) (null? set2)) ())
+        ((element-of-set? (car set1) set2)
+         (cons (car set1)
+               (intersection-set (cdr set1) set2)))
+        (else (intersection-set (cdr set1) set2))))
+
+; test
+(newline)
+(display (element-of-set? 'x list-1))
+(newline)
+(display (adjoin-set 's list-1))
+(newline)
+(display (union-set list-1 list-2))
+(newline)
+(display (intersection-set list-1 list-2))
+
+; sets as ordered lists
 
 
