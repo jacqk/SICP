@@ -277,4 +277,127 @@
 
 ; sets as ordered lists
 
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((= x (car set)) #t)
+        ((> x (car set)) #f)
+        (else (element-of-set? x (cdr set)))))
 
+(define (intersection-set set1 set2)
+  (if (or (null? set1) (null? set2))
+    ()
+    (let ((x1 (car set1))
+          (x2 (car set2)))
+      (cond ((= x1 x2)
+             (cons x1
+                   (intersection-set (cdr set1) (cdr set2))))
+            ((< x1 x2)
+             (intersection-set (cdr set1) set2))
+            ((> x1 x2)
+             (intersection-set set1 (cdr set2)))))))
+
+; ex2.61
+
+(define (adjoin-set x set)
+  (cond ((= x (car set)) set)
+        ((> x (car set))
+         (cons (car set) (adjoin-set x (cdr set))))
+        ((< x (car set))
+         (cons x set))))
+
+; ex2.61
+
+(define (union-set set1 set2)
+  (cond ((null? set1) set2)
+        ((null? set2) set1)
+        (else (let ((x1 (car set1))
+                    (x2 (car set2)))
+                (cond ((= x1 x2)
+                       (cons x1 (union-set (cdr set1) (cdr set2))))
+                      ((> x1 x2)
+                       (cons x2 (union-set set1 (cdr set2))))
+                      ((< x1 x2)
+                    (cons x1 (union-set (cdr set1) set2))))))))
+
+; test
+
+(define list-1 (list 1 2 3 4))
+(define list-2 (list 3 4 5 6))
+
+(newline)
+(display (element-of-set? 1 list-1))
+(newline)
+(display (element-of-set? 3 list-2))
+(newline)
+(display (intersection-set list-1 list-2))
+(newline)
+(display (adjoin-set 2.5 list-1))
+(newline)
+(display (union-set list-1 list-2))
+
+; sets as binary trees
+
+(define (entry tree) (car tree))
+
+(define (left-branch tree) (cadr tree))
+
+(define (right-branch tree) (caddr tree))
+
+(define (make-tree entry left right)
+  (list entry left right))
+
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((= x (entry set)) #t)
+        ((< x (entry set))
+         (element-of-set? x (left-branch set)))
+        ((> x (entry set))
+         (element-of-set? x (right-branch set)))))
+
+(define (adjoin-set x set)
+  (cond ((null? set) (make-tree x () ()))
+        ((= x (entry set)) set)
+        ((< x (entry set))
+         (make-tree (entry set)
+                    (adjoin-set x (left-tree set))
+                    (right-tree set)))
+        ((> x (entry set))
+         (make-tree (entry set)
+                    (left-tree set)
+                    (adjoin-set x (right-tree set))))))
+
+; ex2.63
+
+(define (tree->list-1 tree)
+  (if (null? tree)
+    ()
+    (append (tree->list-1 (left-branch tree))
+            (cons (entry tree)
+                  (tree->list-1 (right-branch tree))))))
+
+(define (tree->list-2 tree)
+  (define (copy-to-list tree result-list)
+    (if (null? tree)
+      result-list
+      (copy-to-list (left-branch tree)
+                    (cons (entry tree)
+                          (copy-to-list (right-branch tree)
+                                        result-list)))))
+  (copy-to-list tree ()))
+
+; test
+(define tree-1
+  (list 7 (list 3 (list 1 () ()) (list 5 () ())) (list 9 () (list 11 () ()))))
+
+(define tree-2
+  (list 3 (list 1 () ()) (list 7 (list 5 () ()) (list 9 () (list 11 () ())))))
+
+(define tree-3
+  (list 5 (list 3 (list 1 () ()) ()) (list 9 (list 7 () (0)) (list 11 () ()))))
+
+(newline)
+(display (element-in-set? 3 tree-1))
+(newline)
+(display (element-in-set? 100 tree-2))
+(newline)
+()
