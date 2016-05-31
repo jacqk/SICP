@@ -385,6 +385,39 @@
                                         result-list)))))
   (copy-to-list tree ()))
 
+; ex2.64
+
+(define (list->tree elements)
+  (car (partial-tree elements (length elements))))
+
+(define (partial-tree elts n)
+  (if (= n 0)
+    (cons () elts)
+    (let ((left-size (quotient (- n 1) 2)))
+      (let ((left-result (partial-tree elts left-size)))
+        (let ((left-tree (car left-result))
+              (non-left-elts (cdr left-result))
+              (right-size (- n (+ left-size 1))))
+          (let ((this-entry (car non-left-elts))
+                (right-result (partial-tree (cdr non-left-elts)
+                                            right-size)))
+            (let ((right-tree (car right-result))
+                  (remaining-elts (cdr right-result)))
+              (cons (make-tree this-entry left-tree right-tree)
+                    remaining-elts))))))))
+
+; ex2.65
+
+(define (intersection-tree set1 set2)
+  (list->tree
+    (intersection-set (tree->list-2 set1)
+                      (tree->list-2 set2))))
+
+(define (union-tree set1 set2)
+  (list->tree
+    (union-set (tree->list-2 set1)
+               (tree->list-2 set2))))
+
 ; test
 (define tree-1
   (list 7 (list 3 (list 1 () ()) (list 5 () ())) (list 9 () (list 11 () ()))))
@@ -411,3 +444,33 @@
 (display (tree->list-2 tree-2))
 (newline)
 (display (tree->list-2 tree-3))
+(newline)
+(display (list->tree (list 1 3 5 7 9 11)))
+(newline)
+(display (union-tree tree-1 tree-2))
+(newline)
+(display (intersection-tree tree-1 tree-2))
+(newline)
+
+; p109
+
+(define (lookup given-key set-of-records)
+  (cond ((null? set-of-records) #f)
+        ((equal? given-key (key set-of-records))
+         (car set-of-records))
+        (else (lookup fiven-key (cdr set-of-records)))))
+
+; ex2.66
+
+(define (lookup given-key set-of-records)
+  (cond ((null? set-of-records) #f)
+        ((equal? given-key (key set-of-records))
+         (entry set-of-records))
+        ((> given-key (key set-of-records))
+         (lookup given-key (right-branch set-of-records)))
+        ((< given-key (key set-of-records))
+         (lookup given-key (left-branch set-of-records)))))
+
+; ex2.3.4 Huffman
+
+
