@@ -471,6 +471,189 @@
         ((< given-key (key set-of-records))
          (lookup given-key (left-branch set-of-records)))))
 
-; ex2.3.4 Huffman
+; 2.3.4 example: Huffman encoding trees
+
+; generating huffman trees
+; representing huffman trees
+
+(define (make-leaf symbol weight)
+  (list 'leaf symbol weight))
+
+(define (leaf? object)
+  (eq? (car object) 'leaf))
+
+(define (symbol-leaf object)
+  (cadr object))
+
+(define (weight-leaf object)
+  (caddr object))
+
+(define (make-code-tree left right)
+  (list left
+        right
+        (append (symbols left) (symbols right))
+        (+ (weight left) (weight right))))
+
+(define (left-branch tree)
+  (car tree))
+
+(define (right-branch tree)
+  (cadr tree))
+
+(define (symbols tree)
+  (if (leaf? tree)
+    (list (symbol-leaf tree))
+    (caddr tree)))
+
+(define (weight tree)
+  (if (leaf? tree)
+    (weight-leaf tree)
+    (cadddr tree)))
+
+; the decoding procedure
+
+(define (decode bits tree)
+  (define (decode-1 bits current-branch)
+    (if (null? bits)
+      ()
+      (let ((next-branch (choose-branch (car bits) current-branch)))
+        (if (leaf? next-branch)
+          (cons (symbol-leaf next-branch)
+                (decode-1 (cdr bits) tree))
+          (decode-1 (cdr bits) next-branch)))))
+  (decode-1 bits tree))
+
+(define (choose-branch bit branch)
+  (cond ((= bit 0) (left-branch branch))
+        ((= bit 1) (right-branch branch))
+        (else (error "bad bit -- CHOOSE-BRANCH" bit))))
+
+; sets of weighted elements
+
+(define (adjoin-set x set)
+  (cond ((null? set) (list x))
+        ((< (weight x) (weight (car set))) (cons x set))
+        (else (cons (car set)
+                    (adjoin-set x (cdr set))))))
+
+(define (make-leaf-set pairs)
+  (if (null? pairs)
+    ()
+    (let ((pair (car pairs)))
+      (adjoin-set (make-leaf (car pair)
+                             (cadr pair))
+                  (make-leaf-set (cdr pairs))))))
+
+; ex2.67
+
+(define sample-tree
+  (make-code-tree (make-leaf 'A 4)
+                  (make-code-tree
+                    (make-leaf 'B 2)
+                    (make-code-tree (make-leaf 'D 1)
+                                    (make-leaf 'C 1)))))
+
+(define sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
+
+(newline)
+(display sample-tree)
+(newline)
+(display sample-message)
+(newline)
+(display (leaf? (make-leaf 'A 1)))
+(newline)
+(display (symbol-leaf (make-leaf 'A 1)))
+(newline)
+(display (weight-leaf (make-leaf 'A 1)))
+(newline)
+(display (left-branch sample-tree))
+(newline)
+(display (right-branch sample-tree))
+(newline)
+(display (symbols sample-tree))
+(newline)
+(display (weight sample-tree))
+(newline)
+(display (decode sample-message sample-tree))
+
+; ex2.68
+
+(define (encode message tree)
+  (if (null? message)
+    ()
+    (append (encode-symbol (car message) tree)
+            (encode (cdr message) tree))))
+
+(define (encode-symbol symbol tree)
+  (define (choose symbol tree)
+    (if (symbol-in-tree? symbol (left-branch tree))
+      '0
+      '1))
+  (if (symbol-in-tree? symbol tree)
+    (cond ((leaf? tree) ())
+          (else
+            (cond ((eq? (choose symbol tree) '0)
+                   (cons '0
+                         (encode-symbol symbol (left-branch tree))))
+                  ((eq? (choose symbol tree) '1)
+                   (cons '1
+                         (encode-symbol symbol (right-branch tree)))))))))
+
+(define (symbol-in-tree? symbol tree)
+  (define (item-in-list list- item)
+    (cond ((null? list-) #f)
+          ((eq? item (car list-)) #t)
+          (else (item-in-list (cdr list-) item))))
+  (let ((symbols (symbols tree)))
+    (item-in-list symbols symbol)))
+
+; test
+
+(define text '(a d a b b c a))
+(newline)
+(display (encode text sample-tree))
+
+; ex2.69
+
+(define (generate-huffman-tree pairs)
+  (successive-merge (make-leaf-set pairs)))
+
+(define (successive-merge ordered-set)
+  (cond ((= 0 (length ordered-set)) ())
+        ((= 1 (length ordered-set)) (car ordered-set))
+        (else (let ((new-sub-tree (make-code-tree (car ordered-set)
+                                                  (cadr ordered-set)))
+                    (remained-set (cddr ordered-set)))
+                (successive-merge (adjoin-set new-sub-tree remained-set))))))
+
+(newline)
+(define sample-list '((A 4) (B 2) (C 1) (D 1)))
+(display sample-list)
+(newline)
+(display (generate-huffman-tree sample-list))
+
+; ex2.70
+
+(define rock-list '((A 2) (NA 16) (BOOM 1) (SHA 3) (GET 2) (YIP 9) (JOB 2) (WAH 1)))
+
+(define rock-huffman-tree (generate-huffman-tree rock-list))
+
+(define rock-msg '(Get a job
+                   Sha na na na na na na na na
+                   Get a job
+                   Sha na na na na na na na na
+                   Wah yip yip yip yip yip yip yip yip yip
+                   Sha boom))
+
+(newline)
+(display (encode rock-msg rock-huffman-tree))
+
+; ex2.71
+
+(define ex-list-1 '((a 1) (b 2) (c 4) (d 8) (e 16)))
+
+(define ex-list-2 '((a 1) (b 2) (c 4) (d 8) (e 16) (f 32) (g 64) (h 128) (i 256) (j 512)))
+
+; ex2.72
 
 
