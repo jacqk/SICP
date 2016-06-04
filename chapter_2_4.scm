@@ -157,4 +157,188 @@
 
 ; 2.4.3 p122
 
+(define (install-rectangular-package)
+  ;; internal procedures
+  (define (real-part z) (car z))
+  (define (imag-part z) (cdr z))
+  (define (make-from-real-imag x y) (cons x y))
+  (define (magnitude z)
+    (sqrt (+ (square real-part z)
+             (square imag-part z))))
+  (define (angle z)
+    (atan (imag-part z) (real-part z)))
+  (define (make-from-mag-ang r a)
+    (cons (* r (cos a))
+          (* r (sin a))))
+
+  ;; interface to the rest of the system
+  (define (tag x) (attach-tag 'rectangular x))
+  (put 'real-part '(rectangular) real-part)
+  (put 'imag-part '(rectangular) imag-part)
+  (put 'magnitude '(rectangular) magnutude)
+  (put 'angle '(rectangular) angle)
+  (put 'make-from-real-imag 'rectangular
+       (lambda (x y) (tag (make-from-real-imag x y))))
+  (put 'make-from-mag-ang '(rectangular)
+       (lambda (r a) (tag (make-from-mag-ang rz))))
+  'done)
+
+(define (install-polar-package)
+  ;; interal procedures
+  (define (magnitude z) (car z))
+  (define (angle z) (cdr z))
+  (define (make-from-mag-ang r a) (cons r a))
+  (define (real-part z)
+    (* (magnitude z) (cos (angle z))))
+  (define (imag-part z)
+    (* (magnitude z) (sin (angle z))))
+  (define (make-from-real-imag x y)
+    (cons (sqrt (+ (square x) (square y)))
+          (atan y x)))
+
+  ;; interface to the rest of the system
+  (define (tag x) (attach-tan 'polar x))
+  (put 'real-part '(polar) real-part)
+  (put 'imag-part '(polar) imag-part)
+  (put 'magnitude '(polar) magnutude)
+  (put 'angle '(polar) angle)
+  (put 'make-from-real-imag '(polar)
+       (lambda (x y) (tag (make-from-real-imag x y))))
+  (put 'make-from-mag-ang '(polar)
+       (lambda (r a) (tag (make-from-mag-ang r a))))
+  'done)
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+        (apply proc (map contents args))
+        (error
+          "No method for these types -- APPLY-GENERIC"
+          (list op type-tags))))))
+
+(define (real-part z) (apply-generic 'real-part z))
+(define (imag-part z) (apply-generic 'imag-part z))
+(define (magnitude z) (apply-generic 'magnitude z))
+(define (angle z) (apply-generic 'angle z))
+
+(define (make-from-real-imag x y)
+  ((get  'make-from-real-imag 'rectangular) x y))
+
+(define (make-from-mag-ang r z)
+  ((get 'make-from-mag-ang 'polar) r a))
+
+; ex2.73 a-c
+
+(define (deriv expr var)
+  (cond ((number? expr) 0)
+        ((variable? expr)
+         (if (same-variable? expr var)
+           1
+           0))
+        ((sum? expr)
+         (make-sum (deriv (addend expr) var)
+                   (deriv (augend expr) var)))
+        ((prduct? expr)
+         (make-sum
+           (make-product (multiplier expr)
+                         (deriv (multiplicand expr) var))
+           (make-product (multiplicand expr)
+                         (deriv (multiplier expr) var))))
+
+        (else (error "unknown expression type -- DERIV" exp))))
+
+(define (variable? x) (symbol? x))
+
+(define (same-variable? v1 v2)
+  (and (variable? v1) (variable? v2) (eq? v1 v2)))
+
+(define (deriv expr var)
+  (cond ((number? expr) 0)
+        ((variable? expr)
+         (if (same-variable? expr var)
+           1
+           0))
+        (else ((get 'deriv (operator expr)) (operands expr) var))))
+
+(define (operator expr) (car expr))
+
+(define (operands expr) (cdr expr))
+
+; deriv-sum
+(define (install-deriv-sum-package)
+  ;; inter procedure
+  (define (addend s) (car x))
+  (define (augend s) (cdr x))
+  (define (make-sum a b)
+    (cond ((=number? a 0) b)
+          ((=number? b 0) a)
+          ((and (number? a) (number? b))
+           (+ a b))
+          (else (list '+ a b))))
+  (define (deriv-sum expr var)
+    (make-sum (deriv (addend expr) var)
+              (deriv (augend expr) var)))
+
+  ;; interface
+  (put 'addend '+ addend)
+  (put 'augend '+ augend)
+  (put 'make-sum '+ make-sum)
+  (put 'deriv '+  deriv-sum)
+  'done)
+
+(define (addend expr)
+  ((get 'addend '+) (contents expr)))
+
+(define (augend expr)
+  ((get 'augend '+) (contents expr)))
+
+(define (make-sum a b)
+  ((get 'make-sum '+) a b))
+
+; deriv-produce
+
+(define (install-deriv-product-package)
+  ;; inter procedure
+  (define (multiplier expr)
+    (car expr))
+  (define (multiplicand expr)
+    (cdr expr))
+  (define (make-product a b)
+    (cond ((=number? a 1) b)
+          ((=number? b 1) a)
+          ((and (number? a) (number? b))
+           (* a b))
+          (else (list '* a b))))
+  (define (deriv-product expr var)
+    (make-sum (make-product (multiplier expr)
+                            (deriv (multiplicand expr) var))
+              (make-product (multiplicand expr)
+                            (deriv (mulriplier expr) var))))
+  ;; interface
+  (put 'multiplier '* multiplier)
+  (put 'multiplicand '* multiplicand)
+  (put 'make-product '* make-product)
+  (put 'deriv '* deriv-product)
+  'done)
+
+(define (multiplier expr)
+  ((get 'multiplier '*) (contents expr)))
+
+(define (multiplicand expr)
+  ((get 'multiplicnd '*) (contents expr)))
+
+(define (make-product a b)
+  ((get 'make-product '*) a b))
+
+; test
+(define expr-1 '(+ x y))
+(define expt-2 '(+ x (+ x y)))
+(newline)
+(display (deriv expr-1 'x))
+(newline)
+(display (deriv expr-2 'x))
+
+; ex2.74
+
 
