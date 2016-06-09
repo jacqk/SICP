@@ -309,14 +309,142 @@
 ; ex2.80
 
 ; 2.5.2 combining data of different dypes
-;
 ; coercion
-;
+
+(define (scheme-number->complex n)
+  (make-complex-from-real-imag (contents n) 0))
+
+(put-coercion 'scheme-number 'complex scheme-number->complex)
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+        (apply proc (map contents args))
+        (if (= (length args) 2)
+          (let ((type1 (car type-tags))
+                (type2 (cadr type-tags))
+                (a1 (car args))
+                (a2 (cadr args)))
+            (let ((t1->t2 (get-coercion type1 type2))
+                  (t2->t1 (get-coercion type2 type1)))
+              (cond (t1->t2
+                     (apply-generic op (t1->t2 a1) a2))
+                    (t2->t1
+                     (apply-generic op a1 (t2->t1 a2)))
+                    (else
+                      (error "No method for these types"
+                             (list op type-tags))))))
+          (error "No method for these types"
+                 (list op type-tags)))))))
+
 ; hierarchies of types
 ;
 ; inadequacies of hierarchies
+
+; ex2.81
 ;
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+        (apply proc (map contents args))
+        (if (= (length args) 2)
+          (let ((type1 (car type-tags))
+                (type2 (cadr type-tags))
+                (a1 (car args))
+                (a2 (cadr args)))
+            (if (eq? type1 type2)
+              (error "No method for these types"
+                     (list op type-tags))
+              (let ((t1->t2 (get-coercion type1 type2))
+                    (t2->t1) (get-coercion type2 type1))
+                (cond (t1->t2
+                        (apply-generic op (t1->t2 a1) a2))
+                      (t2->t1
+                        (apply-generic op a1 (t2->t1 a2)))
+                      (else
+                        (error "No method for these types"
+                               (list op type-tags)))))))
+          (error "No method for these types"
+                 (list op type-tags)))))))
+; ex2.82
+
+(define (apply-generic op . args)
+  (define (apply-coerced args type-tags)
+    (if (null? type-tags)
+      (error "No method for these types" args)
+      (let ((coerced-type (car type-tags))
+            (coerced-check (check-coerced args (car type-tags)))
+            (proc (get op ((car type-tags) * (length args)))))
+        (if (and coerced-check
+                 proc)
+          (apply proc (map coerced args))
+          (apply-coerced args (cdr type-tags))))))
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+        (apply proc (map contents args))
+        (apply-coerced args (set type-tags))))))
+;
+;
+; ex2.83
+
+(define (raise n)
+  (define (get-raise-type type-tag)
+    (cond ((eq? type-tag int) rat)
+          ((eq? type-tag rat) complex)
+          ((eq? complex) '())))
+  (let ((raised-type (get-raise-type (type-tag n))))
+    (if (null? raised-type)
+      n
+      (raised-type n))))
+
+; ex2.84,85,86 unsolved
+
 ; 2.5.3 example: symbolic algebra
+
+(define (install-polynomial-package)
+  ;; internal procedures
+  ;; representation of poly
+  (define (make-poly variable term-list)
+    (cons variable
+          term-list))
+  (define (variable poly) (car poly))
+  (define (term-list poly) (cdr poly))
+  (define (variable? x)
+    (symbol? x))
+  (define (same-variable? v1 v2)
+    (and (variable? v1)
+         (variable? v2)
+         (eq? v1 v2)))
+
+  ;; representation of terms and term lists
+  (define (adjoin-term))
+
+  (define (add-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+      (make-poly (variable p1)
+                 (add-terms (term-list p1)
+                            (term-list p2)))
+      (error "poly does not in save var" (list p1 p2))))
+
+  (define (mul-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+      (make-poly (variable p1)
+                 (mul-terms (term-list p1)
+                            (term-list p2)))
+      (error "poly does not in save var" (list p1 p2))))
+
+  ;; interface to rest of the system
+  (define (tag g) (attach-tag 'polynomial p))
+  (put 'add '(polynomial polynomial)
+       (lambda (p1 p2) (tag (add-poly p1 p2))))
+  (put 'mul '(polynomial polynomial)
+       (lambda (p1 p2) (tag (mul-poly p1 p2))))
+  (put 'make 'polynomial
+       (lambda (var terms) (tag (make-poly var terms))))
+  'done)
 ;
 ; arithmetic on polynomials
 ;
